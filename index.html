@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Convertitore Numerico | Hubb</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #00c97d, #00cfff);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 30px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .converter {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 40px 30px;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(14px);
+    width: 100%;
+    max-width: 550px;
+    animation: fadeIn 1s ease;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 25px;
+  }
+
+  label {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  input {
+    padding: 14px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 12px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transition: box-shadow 0.3s ease, background 0.3s ease;
+  }
+
+  input::placeholder {
+    color: #eee;
+  }
+
+  input:focus {
+    box-shadow: 0 0 0 3px #ffffffcc;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #00c97d;
+    background: #ffffff;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  button:hover {
+    background: #f0f0f0;
+    transform: scale(1.05);
+  }
+
+  footer {
+    margin-top: 40px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Convertitore Numerico</h1>
+
+  <div class="converter">
+    <div class="field">
+      <label for="decimal">Decimale</label>
+      <input type="text" id="decimal" oninput="fromDecimal(this.value)">
+    </div>
+    <div class="field">
+      <label for="binary">Binario</label>
+      <input type="text" id="binary" oninput="fromBinary(this.value)">
+    </div>
+    <div class="field">
+      <label for="octal">Ottale</label>
+      <input type="text" id="octal" oninput="fromOctal(this.value)">
+    </div>
+    <div class="field">
+      <label for="hex">Esadecimale</label>
+      <input type="text" id="hex" oninput="fromHex(this.value)">
+    </div>
+    <div class="button-container">
+      <button onclick="clearAll()">Pulisci Campi</button>
+    </div>
+
+  </div>
+
+  <footer>
+    &copy; 2025 All rights reserved. Created by Lorenzo Astolfi.
+  </footer>
+
+<script>
+  function normalizeDecimalInput(val) {
+    return val.replace(',', '.');
+  }
+
+  function convertFractionToBase(fraction, base, maxDigits = 16) {
+    let result = '';
+    let count = 0;
+    while (fraction > 0 && count < maxDigits) {
+      fraction *= base;
+      let digit = Math.floor(fraction);
+      result += digit.toString(base).toUpperCase();
+      fraction -= digit;
+      count++;
+    }
+    return result;
+  }
+
+  function fromDecimal(val) {
+    val = normalizeDecimalInput(val);
+    if (val === '') return clearAll();
+
+    const num = Number(val);
+    if (isNaN(num)) return clearAll();
+
+    const intPart = Math.floor(num);
+    const fracPart = num - intPart;
+
+    // BINARIO
+    let binary = intPart.toString(2);
+    if (fracPart > 0) {
+      const binFrac = convertFractionToBase(fracPart, 2);
+      binary += '.' + binFrac;
+    }
+
+    // OTTALE
+    let octal = intPart.toString(8);
+    if (fracPart > 0) {
+      const octFrac = convertFractionToBase(fracPart, 8);
+      octal += '.' + octFrac;
+    }
+
+    // ESADECIMALE
+    let hex = intPart.toString(16).toUpperCase();
+    if (fracPart > 0) {
+      const hexFrac = convertFractionToBase(fracPart, 16);
+      hex += '.' + hexFrac;
+    }
+
+    if (fracPart > 0) {
+      console.warn('Nota: la parte frazionaria è stata approssimata per tutte le basi.');
+    }
+
+    document.getElementById('binary').value = binary;
+    document.getElementById('octal').value = octal;
+    document.getElementById('hex').value = hex;
+  }
+
+  function convertBaseFractionToDecimal(fracStr, base) {
+    let result = 0;
+    for (let i = 0; i < fracStr.length; i++) {
+      const digit = parseInt(fracStr[i], base);
+      if (isNaN(digit)) return NaN;
+      result += digit / Math.pow(base, i + 1);
+    }
+    return result;
+  }
+
+  function fromBinary(val) {
+    if (val === '') return clearAll();
+    if (!/^[01]+(\.[01]+)?$/.test(val)) return clearAll();
+
+    const parts = val.split('.');
+    let intPart = parseInt(parts[0], 2);
+    let fracPart = parts[1] ? convertBaseFractionToDecimal(parts[1], 2) : 0;
+    const total = intPart + fracPart;
+
+    document.getElementById('decimal').value = total.toString().replace('.', ',');
+    fromDecimal(total.toString());
+  }
+
+  function fromOctal(val) {
+    if (val === '') return clearAll();
+    if (!/^[0-7]+(\.[0-7]+)?$/.test(val)) return clearAll();
+
+    const parts = val.split('.');
+    let intPart = parseInt(parts[0], 8);
+    let fracPart = parts[1] ? convertBaseFractionToDecimal(parts[1], 8) : 0;
+    const total = intPart + fracPart;
+
+    document.getElementById('decimal').value = total.toString().replace('.', ',');
+    fromDecimal(total.toString());
+  }
+
+  function fromHex(val) {
+    if (val === '') return clearAll();
+    if (!/^[0-9a-fA-F]+(\.[0-9a-fA-F]+)?$/.test(val)) return clearAll();
+
+    const parts = val.split('.');
+    let intPart = parseInt(parts[0], 16);
+    let fracPart = parts[1] ? convertBaseFractionToDecimal(parts[1].toUpperCase(), 16) : 0;
+    const total = intPart + fracPart;
+
+    document.getElementById('decimal').value = total.toString().replace('.', ',');
+    fromDecimal(total.toString());
+  }
+
+  function clearAll() {
+    document.getElementById('decimal').value = '';
+    document.getElementById('binary').value = '';
+    document.getElementById('octal').value = '';
+    document.getElementById('hex').value = '';
+  }
+</script>
+
+</body>
+</html>
